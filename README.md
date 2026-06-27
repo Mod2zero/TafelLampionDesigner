@@ -37,14 +37,30 @@ De app exporteert **twee printbare onderdelen** (plus een meetijkje):
 
 ```bash
 npm install
-npm run dev        # ontwikkelserver (Vite)
-npm run build      # statische build → dist/
-npm run preview    # bekijk de build lokaal
-npm run validate   # headless geometrie-validatie + sample-STL's in samples/
+npm run dev          # ontwikkelserver (Vite)
+npm run build        # statische build → dist/
+npm run build:single # alles inline in één dist-standalone/index.html
+npm run preview      # bekijk de build lokaal
+npm run validate     # headless geometrie-validatie + sample-STL's in samples/
 ```
 
 Open de dev-URL, kies een preset, stem de vorm/stijl af, schakel tussen
 **Atelier** en **Nacht**, en exporteer.
+
+## De app bekijken
+
+Je hebt **GitHub niet nodig** om de app te zien. Drie manieren:
+
+1. **Lokaal ontwikkelen** — `npm run dev`, open `http://localhost:5173`.
+   (Dubbelklikken op `index.html` werkt *niet*: een Vite-app heeft de server of een
+   build nodig.)
+2. **Eén bestand, dubbelklikken** — `npm run build:single` bouwt alles (JS + CSS)
+   inline in **`dist-standalone/index.html`**. Dat ene bestand open je rechtstreeks
+   in Chrome (dubbelklik, `file://`), zet je op een USB-stick, of plak je in een
+   claude.ai-artifact. Werkt offline; enkel de lettertypes laden extern (met
+   serif/mono-fallback). Three.js zit volledig ingebakken.
+3. **Statisch hosten (optioneel)** — `npm run build` → upload `dist/` naar
+   GitHub Pages, Cloudflare Pages of Netlify (zie *Deploy* onderaan).
 
 ## Architectuur
 
