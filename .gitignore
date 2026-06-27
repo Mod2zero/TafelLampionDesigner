@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.DS_Store
+*.log
+.vite/
+# Door `npm run validate` gegenereerde sample-STL's (regenereerbaar)
+samples/

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lampion J1701 — Parametrische configurator</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%2314110d'/><ellipse cx='16' cy='18' rx='8' ry='10' fill='%23ffb46b'/><rect x='11' y='3' width='10' height='3' rx='1.5' fill='%236e6660'/></svg>">
+<meta name="description" content="Parametrische configurator voor een 3D-printbare tafellampion die een IKEA SOLVINDEN J1701 zonne-LED-module hergebruikt.">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#e9e2d6">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #e9e2d6; --bg-soft: #efe9de; --surface: #f4eee2;
+    --text: #2a2520; --text-soft: #6e6660; --text-faint: #a39b91;
+    --line: rgba(42,37,32,.14); --line-soft: rgba(42,37,32,.08);
+    --accent: #b85a3a;
+    --serif: 'Instrument Serif', Georgia, serif;
+    --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', monospace;
+  }
+  /* Nacht-modus: donkere chrome rond de viewport */
+  body.night {
+    --bg: #14110d; --bg-soft: #1b1712; --surface: #211c16;
+    --text: #f0e7d8; --text-soft: #b8ac9a; --text-faint: #6f655a;
+    --line: rgba(240,231,216,.14); --line-soft: rgba(240,231,216,.07);
+  }
+  /* Concrete container-achtergronden: forceert dat de (gecomposite) scroll-layer
+     van het paneel echt herschildert bij mode-wissel — robuust over browsers,
+     i.p.v. enkel te vertrouwen op var()-herschildering van een voorouder. */
+  body.night header { background:#14110d; }
+  body.night aside  { background:#1b1712; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html,body { height:100%; overflow:hidden; background:var(--bg); color:var(--text); font-family:var(--mono); font-size:12px; -webkit-font-smoothing:antialiased; transition:background .4s ease,color .4s ease; }
+  #app { display:grid; grid-template-columns:1fr 360px; grid-template-rows:auto 1fr; height:100vh; width:100vw; }
+  header { grid-column:1/-1; padding:16px 28px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--line); background:var(--bg); z-index:2; gap:16px; transition:background .4s ease; }
+  .brand { display:flex; align-items:baseline; gap:16px; min-width:0; }
+  .title { font-family:var(--serif); font-size:30px; font-style:italic; letter-spacing:-.02em; line-height:1; white-space:nowrap; }
+  .title::after { content:'.'; color:var(--accent); }
+  .subtitle { font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:.22em; color:var(--text-soft); white-space:nowrap; }
+  .modes { display:flex; gap:6px; align-items:center; }
+  .mode-btn { font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:.16em; padding:8px 14px; background:transparent; border:1px solid var(--line); color:var(--text-soft); cursor:pointer; transition:all .2s ease; }
+  .mode-btn.active { background:var(--text); color:var(--bg); border-color:var(--text); }
+  #viewport { position:relative; background:radial-gradient(ellipse 80% 60% at 50% 35%, #f5efe5 0%, var(--bg) 65%),var(--bg); overflow:hidden; transition:background .4s ease; }
+  body.night #viewport { background:radial-gradient(ellipse 70% 60% at 50% 42%, #221a12 0%, #0a0806 70%),#0a0806; }
+  #viewport canvas { display:block; width:100%!important; height:100%!important; }
+  .hint { position:absolute; bottom:18px; left:24px; font-size:10px; text-transform:uppercase; letter-spacing:.18em; color:var(--text-faint); pointer-events:none; }
+  .stats { position:absolute; top:18px; right:24px; font-size:10px; text-transform:uppercase; letter-spacing:.16em; color:var(--text-faint); text-align:right; line-height:1.7; pointer-events:none; }
+  .stats span { color:var(--text-soft); }
+  aside { border-left:1px solid var(--line); background:var(--bg-soft); overflow-y:auto; padding:20px 20px 40px; display:flex; flex-direction:column; gap:22px; transition:background .4s ease; }
+  aside::-webkit-scrollbar { width:6px; }
+  aside::-webkit-scrollbar-track { background:transparent; }
+  aside::-webkit-scrollbar-thumb { background:var(--line); border-radius:3px; }
+  .section { display:flex; flex-direction:column; gap:13px; }
+  .section-header { display:flex; justify-content:space-between; align-items:baseline; border-bottom:1px solid var(--line); padding-bottom:8px; }
+  .section-title { font-family:var(--serif); font-style:italic; font-size:18px; color:var(--text); line-height:1; }
+  .section-num { font-family:var(--mono); font-size:9px; color:var(--text-faint); letter-spacing:.2em; }
+  .control { display:flex; flex-direction:column; gap:4px; }
+  .control-label { display:flex; justify-content:space-between; align-items:baseline; font-size:10px; text-transform:uppercase; letter-spacing:.14em; }
+  .control-label .name { color:var(--text-soft); }
+  .control-label .value { color:var(--text); font-variant-numeric:tabular-nums; font-weight:500; }
+  input[type="range"] { -webkit-appearance:none; appearance:none; width:100%; height:18px; background:transparent; cursor:pointer; margin:0; }
+  input[type="range"]::-webkit-slider-runnable-track { height:1px; background:var(--line); border:none; }
+  input[type="range"]::-webkit-slider-thumb { -webkit-appearance:none; appearance:none; width:12px; height:12px; border-radius:50%; background:var(--text); margin-top:-6px; border:2px solid var(--bg-soft); transition:transform .15s ease,background .15s ease; box-shadow:0 1px 2px rgba(0,0,0,.1); }
+  input[type="range"]:hover::-webkit-slider-thumb,
+  input[type="range"]:focus::-webkit-slider-thumb { background:var(--accent); transform:scale(1.25); }
+  input[type="range"]::-moz-range-track { height:1px; background:var(--line); border:none; }
+  input[type="range"]::-moz-range-thumb { width:12px; height:12px; border-radius:50%; background:var(--text); border:2px solid var(--bg-soft); cursor:pointer; }
+  .seg { display:grid; grid-auto-flow:column; grid-auto-columns:1fr; gap:6px; }
+  .seg button { font-family:var(--serif); font-style:italic; font-size:14px; background:transparent; border:1px solid var(--line); padding:9px 4px; cursor:pointer; color:var(--text); transition:all .2s ease; }
+  .seg button:hover { background:var(--text); color:var(--bg-soft); border-color:var(--text); }
+  .seg button.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+  .presets { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; }
+  .preset { font-family:var(--serif); font-style:italic; font-size:14px; background:transparent; border:1px solid var(--line); padding:9px 4px; cursor:pointer; color:var(--text); transition:all .2s ease; }
+  .preset:hover { background:var(--text); color:var(--bg-soft); border-color:var(--text); }
+  .toggle-row { display:flex; justify-content:space-between; align-items:center; font-size:10px; text-transform:uppercase; letter-spacing:.14em; color:var(--text-soft); }
+  .toggle-row button { font-family:var(--mono); font-size:9px; letter-spacing:.16em; padding:6px 12px; border:1px solid var(--line); background:transparent; color:var(--text-soft); cursor:pointer; }
+  .toggle-row button.on { background:var(--text); color:var(--bg); border-color:var(--text); }
+  .colors { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+  .color { width:26px; height:26px; border-radius:50%; cursor:pointer; border:2px solid transparent; transition:all .2s ease; box-shadow:inset -3px -3px 6px rgba(0,0,0,.15),0 1px 2px rgba(0,0,0,.08); }
+  .color:hover { transform:scale(1.1); }
+  .color.active { border-color:var(--text); transform:scale(1.15); }
+  .actions { display:flex; flex-direction:column; gap:6px; }
+  button.action { font-family:var(--mono); text-transform:uppercase; letter-spacing:.2em; font-size:10px; padding:13px; background:var(--text); color:var(--bg); border:none; cursor:pointer; transition:background .2s ease; font-weight:500; }
+  button.action:hover { background:var(--accent); color:#fff; }
+  button.action.secondary { background:transparent; color:var(--text); border:1px solid var(--line); }
+  button.action.secondary:hover { background:var(--text); color:var(--bg); border-color:var(--text); }
+  .note { font-size:10px; line-height:1.6; color:var(--text-faint); letter-spacing:.02em; }
+  .note b { color:var(--text-soft); font-weight:500; }
+  .report { font-size:10px; line-height:1.7; color:var(--text-soft); white-space:pre-wrap; border:1px solid var(--line); padding:10px 12px; background:var(--surface); display:none; }
+  .report.show { display:block; }
+  .report .ok { color:#3f7a3f; } .report .bad { color:var(--accent); }
+  body.night .report .ok { color:#9bd49b; }
+  @media (max-width:920px) {
+    #app { grid-template-columns:1fr; grid-template-rows:auto 48vh 1fr; }
+    aside { border-left:none; border-top:1px solid var(--line); }
+    header { padding:12px 16px; flex-wrap:wrap; }
+    .title { font-size:22px; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="brand">
+      <div class="title">Lampion J1701</div>
+      <div class="subtitle">Parametrische configurator</div>
+    </div>
+    <div class="modes">
+      <button class="mode-btn active" id="modeAtelier">Atelier</button>
+      <button class="mode-btn" id="modeNight">Nacht</button>
+    </div>
+  </header>
+  <div id="viewport">
+    <div class="stats" id="stats"></div>
+    <div class="hint">Sleep om te draaien · scroll om te zoomen</div>
+  </div>
+  <aside id="controls"></aside>
+</div>
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>

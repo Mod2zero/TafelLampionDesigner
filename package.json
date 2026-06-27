@@ -1,0 +1,29 @@
+{
+  "name": "lampion-j1701",
+  "version": "1.0.0",
+  "description": "Parametrische configurator voor een 3D-printbare tafellampion die een IKEA SOLVINDEN J1701 zonne-LED-module hergebruikt.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "validate": "node scripts/validate.mjs"
+  },
+  "keywords": [
+    "3d-printing",
+    "lantern",
+    "lampion",
+    "vase-mode",
+    "three.js",
+    "ikea",
+    "solvinden",
+    "j1701"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "vite": "^5.4.0"
+  },
+  "dependencies": {
+    "three": "^0.160.0"
+  }
+}
