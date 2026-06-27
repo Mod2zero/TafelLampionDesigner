@@ -94,7 +94,7 @@ export function buildPanel(root, p, handlers) {
 
   // ---- Weergave-toggles ----
   const viewSec = section('Weergave', '07');
-  const collarRow = toggleRow('Toon kraag (assemblage)', true, (on) => handlers.setCollarVisible(on));
+  const collarRow = toggleRow('Toon houder + module', true, (on) => handlers.setCollarVisible(on));
   const bloomRow = toggleRow('Bloom (nacht)', p.bloom, (on) => { p.bloom = on; handlers.updateSim(); });
   viewSec.appendChild(collarRow);
   viewSec.appendChild(bloomRow);
@@ -114,8 +114,8 @@ export function buildPanel(root, p, handlers) {
     b.onclick = fn;
     return b;
   };
-  exportSec.appendChild(mkBtn('Exporteer KAP (vase) ↓', '', () => handlers.exportPart('kap')));
-  exportSec.appendChild(mkBtn('Exporteer KRAAG ↓', '', () => handlers.exportPart('kraag')));
+  exportSec.appendChild(mkBtn('Exporteer LAMPION (vase) ↓', '', () => handlers.exportPart('kap')));
+  exportSec.appendChild(mkBtn('Exporteer LED-HOUDER ↓', '', () => handlers.exportPart('houder')));
   exportSec.appendChild(mkBtn('Exporteer MEETIJKJE ↓', 'secondary', () => handlers.exportPart('meetijkje')));
   exportSec.appendChild(mkBtn('Valideer kap (manifold)', 'secondary', () => handlers.validate()));
   exportSec.appendChild(mkBtn('Terugzetten', 'secondary', () => { handlers.reset(); refreshAll(); }));

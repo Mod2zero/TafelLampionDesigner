@@ -1,32 +1,39 @@
-# Meetijkje (fit-gauge) — kalibreer de module-speling
+# Meetijkje (fit-gauge) — kalibreer de pasvorm
 
-De IKEA SOLVINDEN **J1701** varieert per exemplaar (nominaal Ø94 mm, maar meet je
-eigen module na met een schuifmaat). Print daarom **eerst het meetijkje** — enkel de
-clipzone als ring — vóór je uren in een volledige kap steekt.
+De IKEA SOLVINDEN **J1701** varieert per exemplaar (opgemeten: rand Ø102, LED-opening
+Ø94, hoogte 12 mm — meet je eigen module na met een schuifmaat). Print daarom **eerst
+het meetijkje** — een korte testcup — vóór je uren in een volledige lampion steekt.
 
 ## Waarom
 
-Het meetijkje gebruikt **exact dezelfde clips, griplip en speling** als de echte kraag.
-Klikt de module hierin met een lichte, hoorbare klik en blijft ze zitten zonder te
-wiebelen, dan klopt je `Speling module`. Een mislukte gok kost een klein ringetje
-i.p.v. een hele lampion.
+Het meetijkje is **dezelfde cup als de echte rusthuizing, maar laag**. Je test er twee
+dingen mee:
+
+1. **Rust de module?** Legt de J1701 met zijn Ø102-rand netjes en vlak op de steunrichel,
+   met de LED-zijde naar onder door de opening?
+2. **Past de cup in de kapmond?** Zakt de cup soepel (lichte wrijving) in de bovenrand
+   van de lampion?
+
+Een mislukte gok kost een klein cupje i.p.v. een hele lampion.
 
 ## Stappen
 
-1. Meet je module-Ø met een schuifmaat en zet **Module Ø (J1701)** in de configurator.
-2. Exporteer **MEETIJKJE** en print het (zelfde instellingen als de kraag, bij voorkeur PETG).
-3. Klik de J1701 erin:
-   - **Te los / valt eruit** → verlaag `Speling module` (stap 0,05 mm).
-   - **Gaat er niet in / clips breken** → verhoog `Speling module` of verhoog `Griplip` niet te ver.
-   - **Lichte klik, blijft zitten** → ✓ noteer de waarde.
-4. Gebruik die `Speling module` voor de echte **KRAAG**.
+1. Meet je module na en zet **Module rand-Ø**, **LED-opening Ø** en **Module hoogte** in de configurator.
+2. Exporteer **MEETIJKJE** en print het (zelfde instellingen als de rusthuizing).
+3. Test:
+   - **Module wiebelt / zakt scheef** → verklein `Steunrichel` of verhoog `Speling module` licht.
+   - **Module past niet / rand raakt de wand** → verhoog `Speling module`.
+   - **Cup gaat niet in de kapmond** → verhoog `Speling kapmond`.
+   - **Cup zit te los in de mond** → verlaag `Speling kapmond`.
+4. Gebruik die waarden voor de echte **LED-RUSTHUIZING**.
 
 ## Startwaarden (mm)
 
 | Tolerantie | Bereik |
 |---|---|
-| Module-speling (clip ↔ J1701) | 0,30 – 0,40 |
-| Klem-speling (kraag ↔ kapbovenrand) | 0,20 – 0,30 |
-| Griplip (haakdiepte) | 0,8 – 1,2 |
+| Speling module ↔ cupwand | 0,30 – 0,50 |
+| Speling cup ↔ kapmond | 0,30 – 0,50 |
+| Steunrichel (breedte) | 2 – 4 |
 
-> Materiaal voor kraag én meetijkje: **PETG** — de cantilever-clips zijn minder bros dan in PLA.
+> De module **rust** (zwaartekracht) — er is geen klemkracht nodig. Zet eventueel
+> `Borgnokjes` op 2–3 als je de lamp wilt kunnen kantelen/dragen zonder dat de module loskomt.

@@ -3,17 +3,21 @@
 Een browser-gebaseerde **parametrische configurator** voor een 3D-printbare
 tafellampion die een gerecupereerde **IKEA SOLVINDEN J1701** zonne-LED-module
 hergebruikt (de ronde module waar de lichtsnoeren aan vastklikken; snoeren
-verwijderd). De module zit bovenop, **LED naar beneden**, en verlicht de lampion
-van binnenuit. De zonnecel kijkt door de centrale opening naar boven en laadt
-overdag op.
+verwijderd). De module **rust verzonken in de mond van de lampion**, **LED naar
+beneden**, en verlicht de lampion van binnenuit. De zonnecel kijkt door de
+centrale opening naar boven en laadt overdag op.
 
-De app exporteert **twee printbare onderdelen** (plus een meetijkje):
+Het eindproduct = **twee printbare delen** + de J1701-module (een meetijkje is enkel
+een los kalibratie-testprintje, geen onderdeel van de lamp):
 
 | Onderdeel | Print | Functie |
 |---|---|---|
-| **KAP** | spiral/vase-mode | het lampionlichaam — één doorlopende, lichtdoorlatende wand |
-| **KRAAG** (LED-hub) | normaal | klemt over de kapbovenrand en houdt de J1701 met cantilever-clips |
-| **MEETIJKJE** | normaal | enkel de clipzone als ring, om de module-speling te kalibreren |
+| **LAMPION** (kap) | spiral/vase-mode | het lampionlichaam — één doorlopende, lichtdoorlatende wand |
+| **LED-RUSTHUIZING** | normaal | cupje dat verzonken in de kapmond zakt; de J1701 **rust** met zijn Ø102-rand op een richel, LED schijnt door de Ø94-opening |
+| *meetijkje* | normaal | korte testcup om de pasvorm te kalibreren vóór de volledige print |
+
+> **Opgemeten J1701:** rand/kraag **Ø102 mm** · onderkant-binnen (LED-opening) **Ø94 mm** ·
+> hoogte **12 mm**. Alle maten blijven parametrisch (exemplaren variëren).
 
 ![twee modi: atelier om te ontwerpen, nacht om de gloed te simuleren]
 
@@ -24,8 +28,8 @@ De app exporteert **twee printbare onderdelen** (plus een meetijkje):
 - **Drie stijlfamilies** — *organisch/spiraal* (twist + lage-frequentie golf),
   *geribd* (verticale groeven, klassieke lampion) en *gefacetteerd* (N-hoek-doorsnede).
 - **Wanddikte als "lichtdoorlaat"** — default afgestemd op vase-mode (één nozzlebreedte).
-- **Parametrische kraag** — module-Ø, aantal clips, griplip, speling (default 0,35 mm);
-  de klem-binnen-Ø wordt afgeleid van de kapbovenrand.
+- **Parametrische LED-rusthuizing** — module rand-Ø/LED-opening/hoogte, speling, steunrichel;
+  de cup-buiten-Ø wordt afgeleid van de kapmond zodat hij verzonken past.
 - **Realtime nacht-simulator** — donkere scène, warme LED-puntbron van bovenaf,
   gloeiende wand (dunner = feller, groeven feller), bloom-halo, warme lichtplas op tafel.
 - **Atelier-modus** — neutrale studiobelichting om rustig te ontwerpen.
@@ -90,43 +94,43 @@ met een massieve bodem en een propere cilindrische bovenrand. De slicer maakt de
 enkele wand (spiralize); jij levert enkel een schone manifold. De dubbelwand-mesh
 wordt **nooit** als kap-STL geëxporteerd.
 
-De kraag is opgebouwd uit **samengevoegde primitieven** (`BufferGeometryUtils.mergeGeometries`)
-— geen CSG/boolean-library. Overlappende primitieven slicen prima voor een
-normaal-geprint onderdeel.
+De LED-rusthuizing is een **axisymmetrisch cupje** (één revolve → watertight manifold);
+optionele borgnokjes worden toegevoegd met `mergeGeometries` — geen CSG/boolean-library.
 
 ## Printinstellingen
 
-### KAP — vase / spiral-mode
+### LAMPION (kap) — vase / spiral-mode
 - **Spiralize outer contour / Spiral vase: AAN**
 - Wanddikte = 1 perimeter = de ingestelde wanddikte (0,8–1,0 mm; 0,4 nozzle → ~0,8 mm, 0,6 nozzle → ~1,0 mm)
 - Laaghoogte 0,20–0,28 mm · 4–5 bodemlagen · 0 toplagen · 0 % infill · geen supports
 - Materiaal: **wit/naturel PLA of PETG** geeft de warmste gloed
 
-### KRAAG — normaal
-- Oriëntatie: **platte ring op het bed, clips omhoog**
-- 3 perimeters · laaghoogte 0,16–0,20 mm · 20–30 % infill · geen supports (griplip-overhang is bridgebaar)
-- Materiaal: **PETG aanbevolen** (clips minder bros dan PLA)
+### LED-RUSTHUIZING — normaal
+- Oriëntatie: **lip plat op het bed, opening omhoog** (de richel print als korte bridge)
+- 3 perimeters · laaghoogte 0,16–0,20 mm · 20–30 % infill · geen supports
+- De module **rust** op de richel (zwaartekracht) → geen flexbelasting, dus **PLA of PETG** mag
 
 ### MEETIJKJE
-- Zelfde instellingen als de kraag. Zie [`public/fit-gauge.md`](public/fit-gauge.md).
+- Korte testcup, zelfde instellingen. Zie [`public/fit-gauge.md`](public/fit-gauge.md).
 
 ## Toleranties (startwaarden, mm)
 
 | Tolerantie | Bereik | Parameter |
 |---|---|---|
-| Module-speling (clip ↔ J1701) | 0,30 – 0,40 | `Speling module` |
-| Klem-speling (kraag ↔ kapbovenrand) | 0,20 – 0,30 | `Speling klem` |
-| Griplip (haakdiepte) | 0,8 – 1,2 | `Griplip` |
+| Speling module ↔ cupwand | 0,30 – 0,50 | `Speling module` |
+| Speling cup ↔ kapmond | 0,30 – 0,50 | `Speling kapmond` |
+| Steunrichel (breedte onder de rand) | 2 – 4 | `Steunrichel` |
 
 De J1701-maten variëren per exemplaar → **meet je module** en **print eerst het meetijkje**.
 
 ## Montage
 
-1. Print de **KAP** (vase-mode) en de **KRAAG** (normaal, PETG).
-2. Zet de kraag met de **klem-skirt over de bovenrand** van de kap (lichte pasdruk).
-3. Plaats de **J1701** met de **LED naar beneden** in de kraag; de clips klikken
-   over de modulerand. De zonnecel kijkt naar boven door de centrale opening.
-4. Klaar — de LED schijnt naar beneden de kap in en de wand gloeit.
+1. Print de **LAMPION** (vase-mode) en de **LED-RUSTHUIZING** (normaal).
+2. Plaats de **J1701** met de **LED naar beneden** in de rusthuizing; de Ø102-rand
+   **rust op de richel**, de zonnecel kijkt naar boven.
+3. Laat de rusthuizing **verzonken in de mond** van de lampion zakken; de randlip
+   rust op de bovenrand en verbergt de naad.
+4. Klaar — de LED schijnt door de opening naar beneden de kap in en de wand gloeit.
 
 ## Deploy (statische hosting)
 

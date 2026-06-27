@@ -1,29 +1,16 @@
-// KRAAG (LED-hub) en MEETIJKJE — opgebouwd uit samengevoegde primitieven.
+// LED-RUSTHUIZING ("houder") en MEETIJKJE — opgebouwd uit samengevoegde primitieven.
 // Geen CSG/boolean-library: overlappende primitieven slicen prima voor een
 // normaal-geprint onderdeel (de slicer verenigt de volumes).
 //
-// Opbouw (print-oriëntatie = functionele oriëntatie, bodem op het bed):
-//   • klem-skirt  — grijpt over de bovenrand van de kap (binnen-Ø = kaprand + speling)
-//   • draagring   — de modulerand rust hierop; centrale opening laat de LED door
-//   • clips       — 3–6 cantilevers met griplip die de J1701 van bovenaf vastklikken
-//
-// De kap zit eronder (rand omhoog in de skirt), de module bovenop de draagring,
-// LED naar beneden door de centrale opening de kap in.
+// De houder is een cupje dat VERZONKEN in de mond van de kap zakt:
+//   • randlip   — rust op de bovenrand van de kap (verbergt de naad)
+//   • cupwand   — zakt in de kapmond (pasvorm) en centreert de module zijdelings
+//   • steunrichel (bodem) — de J1701 RUST met zijn Ø102-rand hierop (zwaartekracht)
+//   • centrale opening — de LED schijnt door de Ø94-opening naar beneden de kap in
+// Optioneel: kleine borgnokjes over de rand voor transport.
 
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-
-// Annulaire cilinder (buis/ring/schijf) via revolve van een rechthoekprofiel.
-function tube(innerR, outerR, height, segments = 96) {
-  const pts = [
-    new THREE.Vector2(innerR, 0),
-    new THREE.Vector2(outerR, 0),
-    new THREE.Vector2(outerR, height),
-    new THREE.Vector2(innerR, height),
-    new THREE.Vector2(innerR, 0),
-  ];
-  return new THREE.LatheGeometry(pts, segments);
-}
 
 // Normaliseer naar niet-geïndexeerd met enkel 'position' zodat merge attributen matchen.
 function prep(geo) {
@@ -35,99 +22,101 @@ function prep(geo) {
   return out;
 }
 
-// Eén clip = arm (box) + naar-binnen-haakende griplip (box), geroteerd rond Y.
-// De arm steekt `embed` mm onder `shelfTop` de draagring in zodat de primitieven
-// volumetrisch overlappen (een echte las, geen los rakend vlak); boven de ring
-// rijst hij `clipLength` op.
-function clipParts(p, clipInnerR, shelfTop, embed) {
-  const out = [];
-  const n = Math.max(3, Math.round(p.clipCount));
-  const { clipThickness: tC, clipWidth: wC, clipLength: len, gripLip: lip, gripLipHeight: lipH } = p;
-  const armBottom = shelfTop - embed;
-  const armH = len + embed;
-  const armTop = shelfTop + len;
+// Afgeleide maten van de rusthuizing (ook gebruikt voor visualisatie/assemblage).
+export function collarMetrics(p) {
+  const wall = p.wallThickness;
+  const Rko = p.topRadius;          // kap buitenstraal (bovenrand)
+  const Rki = Rko - wall;           // kap binnenstraal (de mond)
 
+  const flangeR = p.moduleFlangeDiameter / 2;
+  const boreR = p.moduleBoreDiameter / 2;
+
+  // Cup: buiten past in de kapmond, binnen omhult de module-rand.
+  const cupOuterR = Rki - p.houderPlugClearance;
+  const cupInnerR = flangeR + p.moduleClearance;
+  const houderWall = Math.max(1.4, cupOuterR - cupInnerR); // afgeleid; min. 1,4 mm
+
+  // Steunrichel: opening laat de LED door, richel draagt de rand.
+  const openingR = Math.min(cupInnerR - 0.8, Math.max(boreR + 1.0, flangeR - p.ledgeWidth));
+
+  const ledgeT = p.ledgeThickness;
+  const cupDepth = p.cupDepth;
+  const lipT = p.lipThickness;
+  const totalHeight = ledgeT + cupDepth;
+
+  return {
+    Rko, Rki, flangeR, boreR,
+    cupOuterR, cupInnerR, houderWall,
+    openingR, ledgeT, cupDepth, lipT,
+    lipOuterR: Rko,                 // lip ligt gelijk met de kap-buitenrand
+    totalHeight,
+    fits: cupOuterR > cupInnerR + 1.0, // genoeg wand? (anders kap-bovenrand te klein)
+    ledOpeningDiameter: openingR * 2,
+  };
+}
+
+// Optionele borgnokjes (kleine inwaartse boxjes net boven de richel-zone).
+function retentionParts(p, m) {
+  const out = [];
+  const n = Math.round(p.retentionTabs);
+  if (n < 1) return out;
+  const tabW = 8, tabH = 2.2, tabReach = 1.4;
+  const yTop = m.ledgeT + Math.min(m.cupDepth - 1, p.moduleHeight); // net boven de module-rand
   for (let k = 0; k < n; k++) {
     const ang = (k / n) * Math.PI * 2;
     const rot = new THREE.Matrix4().makeRotationY(ang);
-
-    const arm = new THREE.BoxGeometry(tC, armH, wC);
-    arm.translate(clipInnerR + tC / 2, armBottom + armH / 2, 0);
-    arm.applyMatrix4(rot);
-    out.push(prep(arm));
-
-    // Griplip: haakje aan de top dat naar binnen steekt over de modulerand.
-    // Buitenvlak ligt binnen de arm (volledig ingebed → geen los rakend vlak).
-    const hookW = lip + tC / 2;
-    const hook = new THREE.BoxGeometry(hookW, lipH, wC);
-    hook.translate(clipInnerR - lip + hookW / 2, armTop - lipH / 2, 0);
-    hook.applyMatrix4(rot);
-    out.push(prep(hook));
+    const tab = new THREE.BoxGeometry(tabReach + m.houderWall, tabH, tabW);
+    // buitenvlak ingebed in de wand, steekt `tabReach` naar binnen over de rand
+    tab.translate(m.cupInnerR - tabReach + (tabReach + m.houderWall) / 2, yTop + tabH / 2, 0);
+    tab.applyMatrix4(rot);
+    out.push(prep(tab));
   }
   return out;
 }
 
-// Afgeleide maten van de kraag (ook gebruikt voor visualisatie/assemblage).
-export function collarMetrics(p) {
-  const kapTopOuterR = p.topRadius;
-  const clampInnerR = kapTopOuterR + p.clampClearance;
-  const clampOuterR = clampInnerR + p.clampWall;
-  const moduleR = p.moduleDiameter / 2;
-  const clipInnerR = moduleR + p.moduleClearance;
-  const clipOuterR = clipInnerR + p.clipThickness;
-  const shelfInnerR = Math.max(8, Math.min(clampInnerR - 1, moduleR - p.moduleSeatWidth));
-  const shelfOuterR = clipOuterR + 0.8;
-  return {
-    kapTopOuterR, clampInnerR, clampOuterR, moduleR,
-    clipInnerR, clipOuterR, shelfInnerR, shelfOuterR,
-    clampDepth: p.clampDepth,
-    shelfThickness: p.shelfThickness,
-    shelfTop: p.clampDepth + p.shelfThickness,
-    totalHeight: p.clampDepth + p.shelfThickness + p.clipLength,
-    ledOpeningDiameter: shelfInnerR * 2,
-  };
+function assemble(parts) {
+  const merged = mergeGeometries(parts);
+  parts.forEach((g) => g.dispose());
+  merged.computeVertexNormals();
+  merged.computeBoundingBox();
+  merged.translate(0, -merged.boundingBox.min.y, 0);
+  return merged;
 }
 
-const OVERLAP = 0.8; // mm volumetrische overlap tussen primitieven → robuuste las
+// Doorsnede van het cup-massief, één gesloten polygoon → één revolve = watertight
+// manifold (geen overlappende primitieven). `depth` = cup-binnendiepte.
+function cupProfile(m, depth) {
+  const totalH = m.ledgeT + depth;
+  return [
+    new THREE.Vector2(m.openingR, 0),               // opening, bodem
+    new THREE.Vector2(m.openingR, m.ledgeT),        // omhoog langs de LED-opening
+    new THREE.Vector2(m.cupInnerR, m.ledgeT),       // de steunrichel (module rust hier)
+    new THREE.Vector2(m.cupInnerR, totalH),         // omhoog langs de binnenwand
+    new THREE.Vector2(m.lipOuterR, totalH),         // randlip-bovenkant naar buiten
+    new THREE.Vector2(m.lipOuterR, totalH - m.lipT),// lip-buitenkant omlaag
+    new THREE.Vector2(m.cupOuterR, totalH - m.lipT),// terug naar de cupwand
+    new THREE.Vector2(m.cupOuterR, 0),              // omlaag langs de buitenwand
+    new THREE.Vector2(m.openingR, 0),               // sluit de doorsnede
+  ];
+}
 
+function buildCup(m, depth, withTabs, p) {
+  // Omgekeerde doorsnede-volgorde → revolve-normalen wijzen naar buiten.
+  const cup = new THREE.LatheGeometry(cupProfile(m, depth).reverse(), 160);
+  const parts = [prep(cup)];
+  if (withTabs) retentionParts(p, m).forEach((g) => parts.push(g));
+  return assemble(parts);
+}
+
+// Volledige rusthuizing. Print-oriëntatie: lip plat op het bed, opening omhoog.
 export function buildCollarGeometry(p) {
   const m = collarMetrics(p);
-  const parts = [];
-
-  // Klem-skirt (grijpt de kaprand)
-  parts.push(prep(tube(m.clampInnerR, m.clampOuterR, m.clampDepth)));
-
-  // Draagring (module rust hierop; centrale opening = LED-doorgang).
-  // Start iets onder de skirt-top zodat ze volumetrisch overlappen.
-  const shelf = tube(m.shelfInnerR, m.shelfOuterR, m.shelfThickness + OVERLAP);
-  shelf.translate(0, m.clampDepth - OVERLAP, 0);
-  parts.push(prep(shelf));
-
-  // Clips — ingebed in de draagring (embed = volledige ringdikte)
-  clipParts(p, m.clipInnerR, m.shelfTop, m.shelfThickness).forEach((g) => parts.push(g));
-
-  const merged = mergeGeometries(parts);
-  parts.forEach((g) => g.dispose());
-  merged.computeVertexNormals();
-  merged.computeBoundingBox();
-  merged.translate(0, -merged.boundingBox.min.y, 0);
-  return merged;
+  return buildCup(m, m.cupDepth, p.retentionTabs >= 1, p);
 }
 
-// MEETIJKJE: enkel de clipzone als ring. Klein, omkeerbaar testprintje om de
-// module-speling te kalibreren vóór een volledige print.
+// MEETIJKJE: korte cup om de pasvorm te testen — rust de module op de richel?
+// zakt de cup in de kapmond? — vóór een volledige print.
 export function buildGaugeGeometry(p) {
   const m = collarMetrics(p);
-  const ringT = 3;
-  const ringInnerR = Math.max(4, m.clipInnerR - 4);
-  const parts = [];
-  parts.push(prep(tube(ringInnerR, m.clipOuterR + 0.8, ringT)));
-  clipParts(p, m.clipInnerR, ringT, ringT - 0.5).forEach((g) => parts.push(g));
-
-  const merged = mergeGeometries(parts);
-  parts.forEach((g) => g.dispose());
-  merged.computeVertexNormals();
-  merged.computeBoundingBox();
-  merged.translate(0, -merged.boundingBox.min.y, 0);
-  return merged;
+  return buildCup(m, Math.min(m.cupDepth, 6), false, p);
 }

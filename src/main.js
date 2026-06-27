@@ -75,13 +75,14 @@ function rebuild() {
   atelierMat.color.set(p.shadeColor);
   atelierMat.needsUpdate = true;
 
-  // Assemblage-posities
+  // Assemblage: de houder zakt verzonken in de kapmond, de lip rust op de rand;
+  // de module rust op de bodemrichel, LED naar beneden.
   const m = collarMetrics(p);
-  collarMesh.position.y = p.height - p.clampDepth;
-  const seatTop = p.height + p.shelfThickness;
+  collarMesh.position.y = p.height - (m.totalHeight - m.lipT);
+  const floorTop = collarMesh.position.y + m.ledgeT;
   moduleMesh.geometry.dispose();
-  moduleMesh.geometry = new THREE.CylinderGeometry(m.moduleR, m.moduleR, p.moduleThickness, 64);
-  moduleMesh.position.y = seatTop + p.moduleThickness / 2;
+  moduleMesh.geometry = new THREE.CylinderGeometry(p.moduleFlangeDiameter / 2, p.moduleFlangeDiameter / 2, p.moduleHeight, 72);
+  moduleMesh.position.y = floorTop + p.moduleHeight / 2;
 
   collarMesh.visible = showCollar;
   moduleMesh.visible = showCollar && mode !== 'night';
@@ -128,7 +129,7 @@ document.getElementById('modeNight').onclick = () => setMode('night');
 function exportPart(part) {
   let geo, name;
   if (part === 'kap') { geo = buildExportGeometry(p); name = 'lampion-kap.stl'; }
-  else if (part === 'kraag') { geo = buildCollarGeometry(p); name = 'lampion-kraag.stl'; }
+  else if (part === 'houder') { geo = buildCollarGeometry(p); name = 'lampion-led-houder.stl'; }
   else { geo = buildGaugeGeometry(p); name = 'lampion-meetijkje.stl'; }
   exportSTL(geo, name);
   geo.dispose();
@@ -145,7 +146,7 @@ function validate() {
   const cls = kapR.watertight ? 'ok' : 'bad';
   report.innerHTML =
     `<span class="${cls}">${formatReport('KAP-export', kapR).replace(/\n/g, '<br>')}</span><br><br>` +
-    `${formatReport('KRAAG', collarR).replace(/\n/g, '<br>')}`;
+    `${formatReport('LED-HOUDER', collarR).replace(/\n/g, '<br>')}`;
   report.classList.add('show');
 }
 
