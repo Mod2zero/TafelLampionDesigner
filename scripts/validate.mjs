@@ -41,8 +41,8 @@ for (const [name, preset] of Object.entries(presets)) {
 }
 
 const base = makeParams();
-check('KRAAG', buildCollarGeometry(base), false, 'lampion-kraag.stl');
-check('MEETIJKJE', buildGaugeGeometry(base), false, 'lampion-meetijkje.stl');
+check('LED-RUSTHUIZING', buildCollarGeometry(base), true, 'lampion-led-houder.stl');
+check('MEETIJKJE', buildGaugeGeometry(base), true, 'lampion-meetijkje.stl');
 
 if (failures) {
   console.error(`✗ ${failures} controle(s) gefaald`);
